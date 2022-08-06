@@ -1,6 +1,10 @@
 using App.Web.Models.Data;
+using App.Web.Providers;
+using App.Web.Providers.Repositories;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -24,12 +28,38 @@ namespace App.Web
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllersWithViews();
+            services.AddScoped<IUserManager, UserManager>();
+
+            services.AddScoped<IUserRepository, UserRepository>();
 
             services.AddDbContext<ApplicationDbContext>(options =>
             {
                 options.UseSqlite("Data Source=app.db");
             });
+
+            // adding cookie authentication here.Used default options
+            services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultSignOutScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            }).AddCookie(
+               CookieAuthenticationDefaults.AuthenticationScheme, (options) =>
+               {
+                   options.LoginPath = "/Account/Login";
+                   options.LogoutPath = "/Account/Logout";
+               });
+
+            // configuraing cookie policy options
+            services.Configure<CookiePolicyOptions>(options =>
+            {
+                options.CheckConsentNeeded = context => true;
+                options.MinimumSameSitePolicy = SameSiteMode.None;
+            });
+
+            services.AddControllersWithViews();
+
+            
         }
 
 
@@ -39,12 +69,17 @@ namespace App.Web
             {
                 app.UseDeveloperExceptionPage();
             }
-            else
+            else 
             {
                 app.UseExceptionHandler("/Home/Error");
             }
             app.UseHttpsRedirection();
+
             app.UseStaticFiles();
+
+            app.UseCookiePolicy();
+
+            app.UseAuthentication();
 
             app.UseRouting();
 
@@ -54,7 +89,7 @@ namespace App.Web
             {
                 endpoints.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
+                    pattern: "{controller=Account}/{action=Login}/{id?}");
             });
         }
     }

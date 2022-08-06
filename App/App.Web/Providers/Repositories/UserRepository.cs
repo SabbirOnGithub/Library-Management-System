@@ -34,7 +34,7 @@ namespace App.Web.Providers.Repositories
                 EmailAddress = model.EmailAddress,
                 PasswordHash = hashedPassword,
                 Salt = salt,
-                Name = "Some User",
+                Name = model.Name,
                 CreatedUtc = DateTime.UtcNow
             };
 

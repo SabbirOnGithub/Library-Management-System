@@ -22,7 +22,15 @@ namespace App.Web.Controllers
 
         public IActionResult Login()
         {
-            return View();
+            if (User.Identity.IsAuthenticated)
+            {
+                return LocalRedirect("~/Home/Index");
+            }
+            else
+            {
+                return View();
+            }
+           
         }
         
         [Authorize]
